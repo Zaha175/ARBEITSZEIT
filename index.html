@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexibilitätsabfrage</title>
+    <style>
+        body {
+            background-color: #f8f8f8;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+        }
+   
+         body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.gamma.app/fhpleqvbjim2f32/generated-images/m5jbKxn54d6Q01a4tMJgN.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .container {
+            background-color: #fff;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .intro h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .intro p {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .workday-container,
+        .time-slot-container,
+        .upscaling-container,
+        #confirmation .workday-container {
+            border: 1px solid #ffe699;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: #fff9e6;
+            border-radius: 8px;
+        }
+
+        .workday {
+            display: grid;
+            grid-template-columns: 2fr 1fr 0.8fr 0.8fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .workday > label {
+            color: #2c3e50;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .time-slot-label {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        button[type="submit"] {
+            background-color: #ffcc00;
+            color: #333;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .error {
+            color: #e74c3c;
+            padding: 0.8rem;
+            margin-top: 1rem;
+            background: #fdd;
+            border: 1px solid #faa;
+            border-radius: 5px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .workday {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="arbeitszeit-form">
+            <section class="intro">
+                <h1>Ihre Arbeitszeitpräferenzen</h1>
+                <p>Bitte geben Sie Ihre bevorzugten Arbeitszeiten an.</p>
+            </section>
+
+            <section class="workday-container">
+                <label for="workDays">Anzahl Arbeitstage (max. 5):</label>
+                <input type="number" id="workDays" min="1" max="5" value="5" required>
+                <div id="daySelection"></div>
+            </section>
+
+            <section class="time-slot-container">
+                <h2>Bevorzugte Zeitfenster</h2>
+                <div class="time-slots">
+                    <label class="time-slot-label">
+                        <input type="checkbox" name="timeSlot" value="morning">
+                        <span>Vormittag (6-12 Uhr)</span>
+                    </label>
+                    <label class="time-slot-label">
+                        <input type="checkbox" name="timeSlot" value="midday">
+                        <span>Mittagsschicht (12-15 Uhr)</span>
+                    </label>
+                    <label class="time-slot-label">
+                        <input type="checkbox" name="timeSlot" value="afternoon">
+                        <span>Nachmittag (15-22 Uhr)</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="upscaling-container">
+                <label>
+                    <input type="checkbox" id="upscaling">
+                    Aufstockung auf max. 29,8 Std. wöchentlich
+                </label>
+                <p class="hint">(Maximal 5 Stunden Aufstockung möglich)</p>
+            </section>
+
+            <button type="submit">Prüfen & Absenden</button>
+        </form>
+
+        <div class="error" id="form-error"></div>
+        <div id="confirmation"></div>
+    </div>
+
+    <script>
+        const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+        const form = document.getElementById('arbeitszeit-form');
+        const workDaysInput = document.getElementById('workDays');
+        const daySelectionContainer = document.getElementById('daySelection');
+        const confirmationContainer = document.getElementById('confirmation');
+        const errorElement = document.getElementById('form-error');
+        const baseHours = 25;
+
+        function generateDayInputs(numDays) {
+            daySelectionContainer.innerHTML = '';
+            for (let i = 0; i < numDays; i++) {
+                daySelectionContainer.innerHTML += `
+                    <div class="workday">
+                        <label>${days[i].toUpperCase()}</label>
+                        <input type="number" class="hours" min="4" max="8" step="0.1" required>
+                        <label>Min:</label>
+                        <input type="number" class="min" min="4" max="8" step="0.1" value="4">
+                        <label>Max:</label>
+                        <input type="number" class="max" min="4" max="8" step="0.1" value="8">
+                    </div>
+                `;
+            }
+        }
+
+        function validateForm(event) {
+            event.preventDefault();
+            errorElement.style.display = 'none';
+            
+            const upscaling = document.getElementById('upscaling').checked;
+            const maxHours = upscaling ? 29.8 : baseHours;
+            let totalHours = 0;
+            let errorExists = false;
+
+            document.querySelectorAll('.hours').forEach(input => {
+                const value = parseFloat(input.value);
+                const min = parseFloat(input.parentElement.querySelector('.min').value);
+                const max = parseFloat(input.parentElement.querySelector('.max').value);
+
+                if (isNaN(value) || value < min || value > max) {
+                    showError(`Ungültige Eingabe bei ${input.previousElementSibling.textContent}`);
+                    errorExists = true;
+                }
+                totalHours += value || 0;
+            });
+
+            if (!errorExists && totalHours > maxHours) {
+                showError(`Maximal ${maxHours} Stunden überschritten!`);
+                errorExists = true;
+            }
+
+            if (!errorExists && document.querySelectorAll('[name="timeSlot"]:checked').length === 0) {
+                showError('Bitte Zeitfenster auswählen!');
+                errorExists = true;
+            }
+
+            if (!errorExists) showConfirmation(totalHours, upscaling);
+        }
+
+        function showError(message) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function showConfirmation(totalHours, upscaling) {
+            confirmationContainer.innerHTML = `
+                <div class="workday-container">
+                    <h3>Bestätigung</h3>
+                    <p>Arbeitstage: ${workDaysInput.value}</p>
+                    <p>Stunden/Woche: ${totalHours.toFixed(1)}h</p>
+                    <p>Aufstockung: ${upscaling ? 'Ja' : 'Nein'}</p>
+                </div>
+            `;
+        }
+
+        workDaysInput.addEventListener('change', () => generateDayInputs(workDaysInput.value));
+        form.addEventListener('submit', validateForm);
+        generateDayInputs(5);
+    </script>
+</body>
+</html>
