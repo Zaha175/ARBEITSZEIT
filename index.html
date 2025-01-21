@@ -116,8 +116,18 @@
         display: block;
         margin: 0 auto;
     }
+
+  .link-bottom-right {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 1000; /* Über anderen Elementen sichtbar */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
   
-      .error {
+   .error {
             color: #e74c3c;
             padding: 0.8rem;
             margin-top: 1rem;
@@ -184,11 +194,11 @@
         <div class="error" id="form-error"></div>
         <div id="confirmation"></div>
        </div>
-      <a href="https://zaha175.github.io/ALTERUNGSSTOPPPLATFORMULTRA1/" target="_blank">
+     <a href="https://zaha175.github.io/ALTERUNGSSTOPPPLATFORMULTRA1/" target="_blank" class="link-bottom-right">
     <img src="https://cdn.gamma.app/fhpleqvbjim2f32/7795f3d1ccd94e7eb9b4f5e97f0bee8f/original/image.png" 
          alt="JUNGSINGULÄR IST DIE ZUKUNFT" class="scaled-image">
-   </a>
-   
+</a>
+
     <script>
         const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
         const form = document.getElementById('arbeitszeit-form');
