@@ -17,7 +17,7 @@
             line-height: 1.6;
         }
    
-         body::before {
+        body::before {
             content: "";
             position: fixed;
             top: 0;
@@ -69,7 +69,7 @@
 
         .workday {
             display: grid;
-            grid-template-columns: 2fr 1fr 0.8fr 0.8fr;
+            grid-template-columns: 2fr 1fr;
             gap: 1rem;
             align-items: center;
             margin-bottom: 1rem;
@@ -194,10 +194,6 @@
                     <div class="workday">
                         <label>${days[i].toUpperCase()}</label>
                         <input type="number" class="hours" min="4" max="8" step="0.1" required>
-                        <label>Min:</label>
-                        <input type="number" class="min" min="4" max="8" step="0.1" value="4">
-                        <label>Max:</label>
-                        <input type="number" class="max" min="4" max="8" step="0.1" value="8">
                     </div>
                 `;
             }
@@ -214,11 +210,11 @@
 
             document.querySelectorAll('.hours').forEach(input => {
                 const value = parseFloat(input.value);
-                const min = parseFloat(input.parentElement.querySelector('.min').value);
-                const max = parseFloat(input.parentElement.querySelector('.max').value);
+                const min = 4;
+                const max = 8;
 
                 if (isNaN(value) || value < min || value > max) {
-                    showError(`Ungültige Eingabe bei ${input.previousElementSibling.textContent}`);
+                    showError(`Stunden bei ${input.previousElementSibling.textContent} müssen zwischen ${min}-${max}h liegen!`);
                     errorExists = true;
                 }
                 totalHours += value || 0;
